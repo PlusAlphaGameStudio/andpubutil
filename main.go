@@ -24,10 +24,7 @@ func main() {
 	}
 
 	log.Println("andpubutil: load .env file")
-	err = godotenv.Load(".env")
-	if err != nil {
-		log.Panicf("Environment file error: %v", err)
-	}
+	_ = godotenv.Load(".env")
 
 	ctx := context.Background()
 	androidpublisherService, err := androidpublisher.NewService(ctx, option.WithCredentialsFile(os.Getenv("ANDPUBUTIL_ANDROID_PUBLISHER_KEY")))
