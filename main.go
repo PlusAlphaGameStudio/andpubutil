@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -43,7 +44,13 @@ func main() {
 	log.Printf("AppEdit ID: %v", appEdit.Id)
 
 	for _, uploadPath := range os.Args[2:] {
-		uploadFile(androidpublisherService, packageName, appEdit, uploadPath)
+		if strings.HasSuffix(uploadPath, ".apk") {
+			uploadApkFile(androidpublisherService, packageName, appEdit, uploadPath)
+		} else if strings.HasSuffix(uploadPath, ".aab") {
+			uploadAabFile(androidpublisherService, packageName, appEdit, uploadPath)
+		} else {
+			panic("unknown file extension to upload")
+		}
 	}
 
 	commitResult, err := androidpublisherService.Edits.Commit(packageName, appEdit.Id).Do()
@@ -54,7 +61,7 @@ func main() {
 	log.Printf("Commit result status code: %v", commitResult.HTTPStatusCode)
 }
 
-func uploadFile(androidpublisherService *androidpublisher.Service, packageName string, appEdit *androidpublisher.AppEdit, apkPath string) {
+func uploadApkFile(androidpublisherService *androidpublisher.Service, packageName string, appEdit *androidpublisher.AppEdit, apkPath string) {
 	upload := androidpublisherService.Edits.Apks.Upload(packageName, appEdit.Id)
 	dat, err := os.Open(apkPath)
 	if err != nil {
@@ -65,6 +72,28 @@ func uploadFile(androidpublisherService *androidpublisher.Service, packageName s
 	upload.Media(reader, googleapi.ContentType("application/octet-stream"))
 
 	log.Printf("Uploading %v...", apkPath)
+
+	uploadResult, err := upload.Do()
+	if err != nil {
+		log.Panicf("Upload error: %v", err)
+	}
+
+	log.Printf("Upload result status code: %v", uploadResult.HTTPStatusCode)
+	log.Printf("Uploaded version code: %v", uploadResult.VersionCode)
+}
+
+func uploadAabFile(androidpublisherService *androidpublisher.Service, packageName string, appEdit *androidpublisher.AppEdit, aabPath string) {
+
+	upload := androidpublisherService.Edits.Bundles.Upload(packageName, appEdit.Id)
+	dat, err := os.Open(aabPath)
+	if err != nil {
+		log.Panicf("File open error: %v", err)
+	}
+
+	reader := bufio.NewReader(dat)
+	upload.Media(reader, googleapi.ContentType("application/octet-stream"))
+
+	log.Printf("Uploading %v...", aabPath)
 
 	uploadResult, err := upload.Do()
 	if err != nil {
