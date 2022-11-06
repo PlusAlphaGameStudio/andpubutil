@@ -53,7 +53,12 @@ func main() {
 		}
 	}
 
-	commitResult, err := androidpublisherService.Edits.Commit(packageName, appEdit.Id).Do()
+	commitCall := androidpublisherService.Edits.Commit(packageName, appEdit.Id)
+
+	// 파일 업로드일 뿐이므로 리뷰 대상으로 만들 필요는 없다.
+	commitCall.ChangesNotSentForReview(true)
+
+	commitResult, err := commitCall.Do()
 	if err != nil {
 		log.Panicf("Commit result fail: %v", err)
 	}
