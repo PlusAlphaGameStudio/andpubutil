@@ -16,11 +16,13 @@ import (
 
 func main() {
 	log.Println("andpubutil: hello~")
-	// 리뷰 단계 스킵할 수 있는 것을 먼저 체크해서 시도하고,
-	if err := upload(true); err != nil {
-		log.Println("andpubutil: retrying with review flag on (i.e. skipReview=false)")
-		// 실패하면 리뷰 단계 포함해서 시도한다.
-		if err := upload(false); err != nil {
+
+	// 빌드(apk, abb) 업로드는 리뷰 스킵할 수 없는 것 같다...?
+	log.Println("andpubutil: trying with review flag on (skipReview=false)")
+	if err := upload(false); err != nil {
+		log.Println("andpubutil: retrying with review flag on (skipReview=true)")
+		// 실패하면 리뷰 단계 스킵해서 시도한다.
+		if err := upload(true); err != nil {
 			panic(err)
 		}
 	}
